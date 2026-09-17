@@ -7,10 +7,13 @@ function App() {
       <HeaderSummary
         error={inventory.error}
         isDownloading={inventory.isDownloading}
+        isDirty={inventory.isDirty}
         isLoading={inventory.isLoading}
         isSaving={inventory.isSaving}
         metrics={inventory.metrics}
+        onDiscard={inventory.discardChanges}
         onDownload={inventory.downloadReport}
+        onSave={inventory.saveChanges}
       />
 
       <section className="grid min-h-0 gap-4 xl:grid-cols-[280px_minmax(0,1fr)]">

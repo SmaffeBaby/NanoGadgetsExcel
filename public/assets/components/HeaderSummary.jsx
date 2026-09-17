@@ -1,10 +1,13 @@
 function HeaderSummary({
   error,
   isDownloading,
+  isDirty,
   isLoading,
   isSaving,
   metrics,
+  onDiscard,
   onDownload,
+  onSave,
 }) {
   return (
     <section>
@@ -17,9 +20,31 @@ function HeaderSummary({
             <h1 className="mt-1 text-2xl font-semibold text-ink">Складской отчет</h1>
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            <span className="text-xs text-slate-500">
-              {isSaving ? 'Сохраняю...' : 'Сохранено'}
-            </span>
+            {isDirty ? (
+              <div className="flex flex-wrap items-center gap-2 rounded-md border border-amber-200 bg-amber-50 px-2 py-1.5">
+                <span className="text-xs font-medium text-amber-800">Сохранить изменения?</span>
+                <button
+                  type="button"
+                  onClick={onSave}
+                  disabled={isSaving}
+                  className="h-7 rounded bg-ocean px-2.5 text-xs font-semibold text-white transition hover:bg-[#0B5966] disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  Да
+                </button>
+                <button
+                  type="button"
+                  onClick={onDiscard}
+                  disabled={isSaving}
+                  className="h-7 rounded border border-amber-200 bg-white px-2.5 text-xs font-semibold text-amber-800 transition hover:border-amber-300 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  Нет
+                </button>
+              </div>
+            ) : (
+              <span className="text-xs text-slate-500">
+                {isSaving ? 'Сохраняю...' : 'Сохранено'}
+              </span>
+            )}
             <button
               type="button"
               onClick={onDownload}

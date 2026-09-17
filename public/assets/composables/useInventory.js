@@ -18,8 +18,9 @@ function useInventory() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
+  const [isDirty, setIsDirty] = useState(false);
   const [error, setError] = useState('');
-  const didLoad = useRef(false);
+  const savedInventory = useRef({ categories: [], products: [] });
 
   const visibleCategories = useMemo(
     () => [...new Set(categories.filter(Boolean))],
@@ -40,18 +41,6 @@ function useInventory() {
     loadInventory();
   }, []);
 
-  useEffect(() => {
-    if (!didLoad.current) {
-      return;
-    }
-
-    const timeout = window.setTimeout(() => {
-      saveInventory(categories, products);
-    }, 450);
-
-    return () => window.clearTimeout(timeout);
-  }, [categories, products]);
-
   async function loadInventory() {
     setIsLoading(true);
     setError('');
@@ -64,9 +53,12 @@ function useInventory() {
         throw new Error(payload.error || 'Не удалось загрузить данные.');
       }
 
-      setCategories(payload.categories || []);
-      setProducts(payload.products?.length ? payload.products : [{ ...emptyProduct }]);
-      didLoad.current = true;
+      const nextCategories = payload.categories || [];
+      const nextProducts = payload.products?.length ? payload.products : [{ ...emptyProduct }];
+      savedInventory.current = cloneInventory(nextCategories, nextProducts);
+      setCategories(nextCategories);
+      setProducts(nextProducts);
+      setIsDirty(false);
     } catch (loadError) {
       setError(loadError.message);
     } finally {
@@ -89,11 +81,31 @@ function useInventory() {
       if (!response.ok) {
         throw new Error(payload.error || 'Не удалось сохранить данные.');
       }
+
+      savedInventory.current = cloneInventory(nextCategories, nextProducts);
+      setIsDirty(false);
     } catch (saveError) {
       setError(saveError.message);
     } finally {
       setIsSaving(false);
     }
+  }
+
+  function markDirty() {
+    setIsDirty(true);
+  }
+
+  function saveChanges() {
+    return saveInventory(categories, products);
+  }
+
+  function discardChanges() {
+    setCategories(cloneCategories(savedInventory.current.categories));
+    setProducts(cloneProducts(savedInventory.current.products));
+    setNewCategory('');
+    setOpenMenuIndex(null);
+    setError('');
+    setIsDirty(false);
   }
 
   function updateProduct(index, field, value) {
@@ -102,6 +114,7 @@ function useInventory() {
         productIndex === index ? { ...product, [field]: value } : product,
       ),
     );
+    markDirty();
   }
 
   function addProduct() {
@@ -109,6 +122,7 @@ function useInventory() {
       ...current,
       { ...emptyProduct, category: visibleCategories[0] || '' },
     ]);
+    markDirty();
   }
 
   function duplicateProduct(index) {
@@ -117,11 +131,13 @@ function useInventory() {
       return [...current.slice(0, index + 1), copy, ...current.slice(index + 1)];
     });
     setOpenMenuIndex(null);
+    markDirty();
   }
 
   function removeProduct(index) {
     setProducts((current) => current.filter((_, productIndex) => productIndex !== index));
     setOpenMenuIndex(null);
+    markDirty();
   }
 
   function addCategory(event) {
@@ -135,6 +151,7 @@ function useInventory() {
 
     setCategories((current) => [...current, category]);
     setNewCategory('');
+    markDirty();
   }
 
   function removeCategory(category) {
@@ -142,6 +159,7 @@ function useInventory() {
     setProducts((current) =>
       current.map((product) => (product.category === category ? { ...product, category: '' } : product)),
     );
+    markDirty();
   }
 
   function toggleMenu(index) {
@@ -184,10 +202,12 @@ function useInventory() {
     addCategory,
     addProduct,
     categories: visibleCategories,
+    discardChanges,
     downloadReport,
     duplicateProduct,
     error,
     isDownloading,
+    isDirty,
     isLoading,
     isSaving,
     metrics,
@@ -196,10 +216,26 @@ function useInventory() {
     products,
     removeCategory,
     removeProduct,
+    saveChanges,
     setNewCategory,
     toggleMenu,
     updateProduct,
   };
+}
+
+function cloneInventory(categories, products) {
+  return {
+    categories: cloneCategories(categories),
+    products: cloneProducts(products),
+  };
+}
+
+function cloneCategories(categories) {
+  return [...categories];
+}
+
+function cloneProducts(products) {
+  return products.map((product) => ({ ...product }));
 }
 
 window.useInventory = useInventory;
