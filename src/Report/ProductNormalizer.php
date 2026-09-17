@@ -105,6 +105,10 @@ final class ProductNormalizer
             throw new InvalidArgumentException('Дата поставки должна быть корректной датой.');
         }
 
+        if ($year !== 2025) {
+            throw new InvalidArgumentException('Дата поставки должна быть в пределах 2025 года.');
+        }
+
         return sprintf('%04d-%02d-%02d', $year, $month, $day);
     }
 }

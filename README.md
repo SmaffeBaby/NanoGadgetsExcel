@@ -169,7 +169,7 @@ The task:
   - category, 3-4 variants;
   - price from 1,000 to 50,000 RUB;
   - stock from 0 to 200;
-  - delivery date originally limited to 2025.
+  - delivery date within 2025.
 - Create an Excel file:
   - worksheet `Assortment`;
   - full product table;
