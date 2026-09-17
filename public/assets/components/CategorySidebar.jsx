@@ -265,17 +265,14 @@ function ProductFormModal({ categories, product, productNames, onChange, onClose
           </label>
           <label className="text-sm font-medium text-slate-700">
             Название
-            <Input
-              list="product-name-options"
-              value={product.name}
-              placeholder="Название товара"
-              onChange={(value) => onChange('name', value)}
-            />
-            <datalist id="product-name-options">
+            <Select value={product.name} onChange={(value) => onChange('name', value)}>
+              <option value="">Без названия</option>
               {productNames.map((productName) => (
-                <option key={productName} value={productName} />
+                <option key={productName} value={productName}>
+                  {productName}
+                </option>
               ))}
-            </datalist>
+            </Select>
           </label>
           <label className="text-sm font-medium text-slate-700">
             Артикул

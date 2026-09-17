@@ -92,12 +92,19 @@ final class ProductNormalizer
     private static function dateValue(array $item, string $key): string
     {
         $value = trim((string) ($item[$key] ?? ''));
-        $timestamp = strtotime($value . ' 00:00:00 UTC');
 
-        if ($timestamp === false || gmdate('Y', $timestamp) !== '2025') {
-            throw new InvalidArgumentException('Дата поставки должна быть в пределах 2025 года.');
+        if (!preg_match('/^(\d{4})-(\d{2})-(\d{2})$/', $value, $matches)) {
+            throw new InvalidArgumentException('Дата поставки должна быть в формате ГГГГ-ММ-ДД.');
         }
 
-        return gmdate('Y-m-d', $timestamp);
+        $year = (int) $matches[1];
+        $month = (int) $matches[2];
+        $day = (int) $matches[3];
+
+        if (!checkdate($month, $day, $year)) {
+            throw new InvalidArgumentException('Дата поставки должна быть корректной датой.');
+        }
+
+        return sprintf('%04d-%02d-%02d', $year, $month, $day);
     }
 }

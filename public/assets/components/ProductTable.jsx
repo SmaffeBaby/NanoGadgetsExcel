@@ -123,7 +123,7 @@ function ProductTable({
               <tbody>
                 {pageItems.map(({ product, index }) => (
                   <ProductRow
-                    key={`${index}-${product.sku}`}
+                    key={index}
                     product={product}
                     index={index}
                     categories={categories}
