@@ -16,14 +16,25 @@ function App() {
         onSave={inventory.saveChanges}
       />
 
-      <section className="grid min-h-0 gap-4 xl:grid-cols-[280px_minmax(0,1fr)]">
+      <section className="flex min-h-0 flex-col gap-4">
         <CategorySidebar
           categories={inventory.categories}
+          isProductFormOpen={inventory.isProductFormOpen}
           newCategory={inventory.newCategory}
+          newProductName={inventory.newProductName}
           onAddCategory={inventory.addCategory}
-          onAddProduct={inventory.addProduct}
+          onAddProductName={inventory.addProductName}
+          onCloseProductForm={inventory.closeProductForm}
           onNewCategoryChange={inventory.setNewCategory}
+          onNewProductNameChange={inventory.setNewProductName}
+          onProductFormChange={inventory.updateProductForm}
           onRemoveCategory={inventory.removeCategory}
+          onRemoveProductName={inventory.removeProductName}
+          onRenameCategory={inventory.renameCategory}
+          onRenameProductName={inventory.renameProductName}
+          onSubmitProductForm={inventory.submitProductForm}
+          productForm={inventory.productForm}
+          productNames={inventory.productNames}
         />
 
         <ProductTable
@@ -31,6 +42,7 @@ function App() {
           categories={inventory.categories}
           filters={table.filters}
           isLoading={inventory.isLoading}
+          onAddProduct={inventory.addProduct}
           onDuplicate={inventory.duplicateProduct}
           onFilterChange={table.updateFilter}
           onMenuToggle={inventory.toggleMenu}
@@ -45,6 +57,7 @@ function App() {
           pageItems={table.pageItems}
           pageSize={table.pageSize}
           pageSizeOptions={table.pageSizeOptions}
+          productNames={inventory.productNames}
           productsCount={inventory.products.length}
           sort={table.sort}
           totalFiltered={table.totalFiltered}

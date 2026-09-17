@@ -3,6 +3,7 @@ function ProductTable({
   categories,
   filters,
   isLoading,
+  onAddProduct,
   onDuplicate,
   onFilterChange,
   onMenuToggle,
@@ -17,6 +18,7 @@ function ProductTable({
   pageItems,
   pageSize,
   pageSizeOptions,
+  productNames,
   productsCount,
   sort,
   totalFiltered,
@@ -29,10 +31,19 @@ function ProductTable({
     <section className="min-w-0 rounded-lg border border-slate-200 bg-white shadow-sm">
       <div className="border-b border-slate-200 px-4 py-3">
         <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
-          <h2 className="text-base font-semibold text-ink">Ассортимент</h2>
-          <p className="text-xs text-slate-500">
-            Показано {startItem}-{endItem} из {totalFiltered}, всего {productsCount}
-          </p>
+          <div>
+            <h2 className="text-base font-semibold text-ink">Ассортимент</h2>
+            <p className="mt-1 text-xs text-slate-500">
+              Показано {startItem}-{endItem} из {totalFiltered}, всего {productsCount}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={onAddProduct}
+            className="h-10 rounded-md border border-ocean bg-white px-4 text-sm font-semibold text-ocean transition hover:bg-mint"
+          >
+            Добавить товар
+          </button>
         </div>
         <div className="mt-3 grid gap-2 md:grid-cols-2 xl:grid-cols-[1.1fr_1fr_1.4fr_1.4fr_0.8fr_0.8fr_auto]">
           <Select value={filters.category} onChange={(value) => onFilterChange('category', value)}>
@@ -116,6 +127,7 @@ function ProductTable({
                     product={product}
                     index={index}
                     categories={categories}
+                    productNames={productNames}
                     isMenuOpen={openMenuIndex === index}
                     onMenuToggle={() => onMenuToggle(index)}
                     onChange={onUpdate}
@@ -190,6 +202,7 @@ function ProductRow({
   product,
   index,
   categories,
+  productNames,
   isMenuOpen,
   onMenuToggle,
   onChange,
@@ -221,7 +234,14 @@ function ProductRow({
         <Input value={product.sku} onChange={(value) => onChange(index, 'sku', value)} />
       </Td>
       <Td>
-        <Textarea value={product.name} onChange={(value) => onChange(index, 'name', value)} />
+        <Select value={product.name} onChange={(value) => onChange(index, 'name', value)}>
+          <option value="">Без названия</option>
+          {productNames.map((productName) => (
+            <option key={productName} value={productName}>
+              {productName}
+            </option>
+          ))}
+        </Select>
       </Td>
       <Td>
         <Input

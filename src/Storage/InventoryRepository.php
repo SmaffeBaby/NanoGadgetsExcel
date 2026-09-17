@@ -25,23 +25,26 @@ final class InventoryRepository
     }
 
     /**
-     * @return array{categories: array<int, string>, products: array<int, array<string, mixed>>}
+     * @return array{categories: array<int, string>, productNames: array<int, string>, products: array<int, array<string, mixed>>}
      */
     public function all(): array
     {
         $this->seedIfEmpty();
+        $this->seedProductNamesIfEmpty();
 
         return [
             'categories' => $this->categories(),
+            'productNames' => $this->productNames(),
             'products' => $this->products(),
         ];
     }
 
     /**
      * @param array<int, string> $categories
+     * @param array<int, string> $productNames
      * @param array<int, array<string, mixed>> $products
      */
-    public function save(array $categories, array $products): void
+    public function save(array $categories, array $productNames, array $products): void
     {
         $this->pdo->beginTransaction();
 
@@ -61,8 +64,24 @@ final class InventoryRepository
                 }
             }
 
+            $normalizedProductNames = [];
+            foreach ($productNames as $productName) {
+                $productName = trim((string) $productName);
+                if ($productName !== '' && !in_array($productName, $normalizedProductNames, true)) {
+                    $normalizedProductNames[] = $productName;
+                }
+            }
+
+            foreach ($products as $product) {
+                $productName = trim((string) ($product['name'] ?? ''));
+                if ($productName !== '' && !in_array($productName, $normalizedProductNames, true)) {
+                    $normalizedProductNames[] = $productName;
+                }
+            }
+
             $this->pdo->exec('DELETE FROM products');
             $this->pdo->exec('DELETE FROM categories');
+            $this->pdo->exec('DELETE FROM product_names');
 
             $categoryStatement = $this->pdo->prepare(
                 'INSERT INTO categories (name, position) VALUES (:name, :position)'
@@ -70,6 +89,16 @@ final class InventoryRepository
             foreach ($normalizedCategories as $position => $category) {
                 $categoryStatement->execute([
                     ':name' => $category,
+                    ':position' => $position,
+                ]);
+            }
+
+            $productNameStatement = $this->pdo->prepare(
+                'INSERT INTO product_names (name, position) VALUES (:name, :position)'
+            );
+            foreach ($normalizedProductNames as $position => $productName) {
+                $productNameStatement->execute([
+                    ':name' => $productName,
                     ':position' => $position,
                 ]);
             }
@@ -123,6 +152,14 @@ final class InventoryRepository
                 position INTEGER NOT NULL DEFAULT 0
             )'
         );
+
+        $this->pdo->exec(
+            'CREATE TABLE IF NOT EXISTS product_names (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL UNIQUE,
+                position INTEGER NOT NULL DEFAULT 0
+            )'
+        );
     }
 
     private function seedIfEmpty(): void
@@ -137,8 +174,46 @@ final class InventoryRepository
             static fn (array $product): string => (string) $product['category'],
             $products
         )));
+        $productNames = array_values(array_unique(array_map(
+            static fn (array $product): string => (string) $product['name'],
+            $products
+        )));
 
-        $this->save($categories, $products);
+        $this->save($categories, $productNames, $products);
+    }
+
+    private function seedProductNamesIfEmpty(): void
+    {
+        $count = (int) $this->pdo->query('SELECT COUNT(*) FROM product_names')->fetchColumn();
+        if ($count > 0) {
+            return;
+        }
+
+        $rows = $this->pdo
+            ->query('SELECT DISTINCT name FROM products WHERE name <> "" ORDER BY position ASC, id ASC')
+            ->fetchAll();
+        $statement = $this->pdo->prepare(
+            'INSERT INTO product_names (name, position) VALUES (:name, :position)'
+        );
+
+        foreach ($rows as $position => $row) {
+            $statement->execute([
+                ':name' => (string) $row['name'],
+                ':position' => $position,
+            ]);
+        }
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private function productNames(): array
+    {
+        $rows = $this->pdo
+            ->query('SELECT name FROM product_names ORDER BY position ASC, name ASC')
+            ->fetchAll();
+
+        return array_map(static fn (array $row): string => (string) $row['name'], $rows);
     }
 
     /**

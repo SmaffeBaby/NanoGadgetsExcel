@@ -21,11 +21,14 @@ try {
         $categories = isset($payload['categories']) && is_array($payload['categories'])
             ? $payload['categories']
             : [];
+        $productNames = isset($payload['productNames']) && is_array($payload['productNames'])
+            ? $payload['productNames']
+            : [];
         $products = isset($payload['products']) && is_array($payload['products'])
             ? $payload['products']
             : [];
 
-        $repository->save($categories, $products);
+        $repository->save($categories, $productNames, $products);
         echo json_encode(['ok' => true], JSON_UNESCAPED_UNICODE);
         exit;
     }
